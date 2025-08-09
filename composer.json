@@ -1,12 +1,12 @@
 {
-    "name": "forgr/forgr",
+    "name": "forgr/v1",
     "description": "Minimal API-as-a-Service platform - Write functions, register them, use them as APIs",
     "type": "project",
     "license": "MIT",
     "authors": [
         {
-            "name": "Forgr Team",
-            "email": "team@forgr.dev"
+            "name": "chukwunonso prosper",
+            "email": "chukwunonsoprosperischs@gmail.com"
         }
     ],
     "require": {
