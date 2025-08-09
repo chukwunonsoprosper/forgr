@@ -1,0 +1,23 @@
+# Forgr Database (SQLite)
+forgr.db
+
+# Environment variables
+.env
+
+# Composer dependencies
+/vendor/
+composer.lock
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# PHPUnit
+.phpunit.result.cache
