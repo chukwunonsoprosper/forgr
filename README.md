@@ -65,7 +65,7 @@ route('name', 'PATCH');    // Custom HTTP method
 ### Request Methods
 ```php
 $request->getBody()        // JSON body as array
-$request->get('key')       // URL parameter
+$request->getQuery('key')       // URL parameter
 $request->getMethod()      // HTTP method
 $request->getBearerToken() // Authorization header
 ```
