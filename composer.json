@@ -17,6 +17,9 @@
     "autoload": {
         "psr-4": {
             "Forgr\\": "src/"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     }
 }

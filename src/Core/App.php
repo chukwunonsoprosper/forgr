@@ -40,17 +40,15 @@ class App
     public function register(string $functionName, ?array $config = null): void
     {
         $reflection = new \ReflectionFunction($functionName);
-        $filename = $reflection->getFileName();
         
-        // Extract route name from filename
-        $routeName = $this->extractRouteNameFromFile($filename);
+        // Use function name directly as route name - much simpler!
+        $routeName = $functionName;
         
-        // Load route configuration
-        $routeConfig = $config ?? $this->loadRouteConfig($routeName);
+        // Use provided config or defaults
+        $routeConfig = $config ?? $this->getDefaultConfig();
         
         self::$routes[$routeName] = [
             'function' => $functionName,
-            'file' => $filename,
             'config' => $routeConfig,
             'reflection' => $reflection
         ];
@@ -162,7 +160,11 @@ class App
             return require $configFile;
         }
         
-        // Default configuration
+        return $this->getDefaultConfig();
+    }
+
+    private function getDefaultConfig(): array
+    {
         return [
             'method' => 'GET',
             'protected' => false,
@@ -170,12 +172,4 @@ class App
             'rate_limit' => null
         ];
     }
-}
-
-/**
- * Helper function to get the global Forgr app instance
- */
-function forgr(): App
-{
-    return App::getInstance();
 }

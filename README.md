@@ -12,8 +12,8 @@ function hello(Request $request): Response {
     return Response::success(['message' => 'Hello World']);
 }
 
-// 2. Register it  
-\Forgr\Core\App::getInstance()->register('hello', ['method' => 'GET']);
+// 2. Register it (super simple!)
+get('hello');
 
 // 3. Call it
 // GET http://localhost:8080 -H "X-Route: hello"
@@ -26,29 +26,51 @@ composer install
 php -S localhost:8080
 ```
 
-## Test the Example
+## Test the Examples
 
 ```bash
-curl -X GET http://localhost:8080 -H "X-Route: hello" -d '{"name": "Forgr"}'
+# GET route
+curl -X GET http://localhost:8080 -H "X-Route: status"
+
+# POST route
+curl -X POST http://localhost:8080 -H "X-Route: hello" -d '{"name": "Forgr"}'
+
+# Echo route  
+curl -X POST http://localhost:8080 -H "X-Route: echo_data" -d '{"test": "data"}'
+```
+
+## Simple Route Registration
+
+Just use these one-line helpers:
+
+```php
+get('function_name');     // GET route
+post('function_name');    // POST route  
+put('function_name');     // PUT route
+delete('function_name');  // DELETE route
+route('name', 'PATCH');   // Any method
 ```
 
 ## Adding Your Routes
 
-1. Create PHP files in `routes/`
-2. Define functions that take `Request` and return `Response`  
-3. Register them with the app
-4. Use via HTTP with `X-Route` header
+1. Create a `.php` file in `routes/`
+2. Define a function that takes `Request` and returns `Response`
+3. Register with one line: `get('function_name')` or `post('function_name')`
+4. Call via HTTP with `X-Route: function_name`
 
-## Minimal Structure
+**Example:**
 
-```
-forgr/
-├── src/
-│   ├── Core/          # Platform core (App, Request, Response)
-│   ├── HTTP/          # HTTP client for external calls
-│   └── Middleware/    # CORS middleware
-├── routes/            # Your API functions
-└── index.php          # Single entry point
+```php
+<?php
+use Forgr\Core\Request;
+use Forgr\Core\Response;
+
+function my_api(Request $request): Response {
+    $data = $request->get('input');
+    return Response::success(['result' => $data * 2]);
+}
+
+get('my_api'); // That's it!
 ```
 
 ## Response Helpers
@@ -60,15 +82,27 @@ Response::error($message, $code)  // Error response
 Response::notFound()              // 404 Not Found
 ```
 
-## HTTP Client
+## Request Helpers
+
+```php
+$request->get('key')              // Get parameter
+$request->getBody()               // Get JSON body
+$request->getMethod()             // GET, POST, etc
+$request->getBearerToken()        // Authorization header
+```
+
+## HTTP Client for External APIs
 
 ```php
 use Forgr\HTTP\Client;
 
-$client = new Client();
-$data = $client->get('https://api.example.com');
+function external_call(Request $request): Response {
+    $client = new Client();
+    $data = $client->get('https://api.example.com');
+    return Response::success($data);
+}
+
+get('external_call');
 ```
 
-That's it. No database coupling, no auth assumptions, no CLI overhead. 
-
-Just functions → APIs.
+That's it! No complexity, no framework overhead. Just functions → APIs.

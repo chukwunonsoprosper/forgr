@@ -19,8 +19,4 @@ function hello(Request $request): Response
 }
 
 // Register the function as an API route
-\Forgr\Core\App::getInstance()->register('hello', [
-    'method' => 'POST',
-    'cors' => true,
-    'description' => 'A simple hello world endpoint'
-]);
+post('hello');
