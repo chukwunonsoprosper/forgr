@@ -1,200 +1,101 @@
-# Forgr - API-as-a-Service Platform
+# Forgr - Simple PHP Function-to-API
 
-**Turn PHP functions into REST APIs instantly.**
+**Turn PHP functions into REST APIs with one line of code.**
 
-Write a function, register it with one line, call it as an API. No frameworks, no configuration, no complexity.
+Write a function, register it, call it as an API.
 
-## Philosophy: Functions → APIs
+## Quick Example
 
 ```php
-// 1. Write a function
+<?php
+// routes/hello.php
+use Forgr\Core\Request;
+use Forgr\Core\Response;
+
 function hello(Request $request): Response {
-    return Response::success(['message' => 'Hello World']);
+    $data = $request->getBody();
+    $name = $data['name'] ?? 'World';
+    
+    return Response::success(['message' => "Hello {$name}!"]);
 }
 
-// 2. Register it
-get('hello');
+// Register as API endpoint
+post('hello');
+```
 
-// 3. Call it
-// curl -X GET localhost:8080 -H "X-Route: hello"
+Call it:
+```bash
+curl -X POST localhost:8080 \
+  -H "X-Route: hello" \
+  -d '{"name": "John"}'
 ```
 
 ## Quick Start
 
 ```bash
-composer install
+composer create-project forgr/v1 my-api
+cd my-api
 php -S localhost:8080
 ```
 
-Test the examples:
+Test the included example:
 ```bash
-curl -X GET localhost:8080 -H "X-Route: status"
-curl -X POST localhost:8080 -H "X-Route: hello" -d '{"name":"World"}'
-curl -X POST localhost:8080 -H "X-Route: echo_data" -d '{"test":"data"}'
+curl -X POST localhost:8080 -H "X-Route: user"
 ```
 
 ## How It Works
 
-1. **Create** a `.php` file in `routes/`
-2. **Write** a function that takes `Request` and returns `Response`  
-3. **Register** with: `get('function_name')` or `post('function_name')`
-4. **Call** via HTTP with `X-Route: function_name`
+1. Create a `.php` file in the `routes/` folder
+2. Write a function that takes `Request` and returns `Response`
+3. Register it: `get('function_name')` or `post('function_name')`
+4. Call via HTTP with `X-Route: function_name` header
 
-### Example Route
-```php
-<?php
-// routes/calculator.php
-use Forgr\Core\Request;
-use Forgr\Core\Response;
-
-function add_numbers(Request $request): Response {
-    $data = $request->getBody();
-    $result = ($data['a'] ?? 0) + ($data['b'] ?? 0);
-    
-    return Response::success(['result' => $result]);
-}
-
-post('add_numbers');
-```
-
-Test it:
-```bash
-curl -X POST localhost:8080 \
-  -H "X-Route: add_numbers" \
-  -d '{"a": 5, "b": 3}'
-```
-
-## Registration Helpers
+## Registration Functions
 
 ```php
 get('function_name');      // GET route
-post('function_name');     // POST route  
+post('function_name');     // POST route
 put('function_name');      // PUT route
 delete('function_name');   // DELETE route
-route('name', 'PATCH');    // Any HTTP method
+route('name', 'PATCH');    // Custom HTTP method
 ```
 
-## Request & Response
+## Request & Response API
 
-### Request Object
+### Request Methods
 ```php
-$request->get('key')           // Get parameter
-$request->getBody()            // JSON body as array
-$request->getMethod()          // HTTP method
-$request->getBearerToken()     // Authorization: Bearer token
+$request->getBody()        // JSON body as array
+$request->get('key')       // URL parameter
+$request->getMethod()      // HTTP method
+$request->getBearerToken() // Authorization header
 ```
 
-### Response Helpers
+### Response Methods
 ```php
-Response::success($data)       // 200 OK
-Response::created($data)       // 201 Created  
+Response::success($data)       // 200 with data
+Response::created($data)       // 201 Created
 Response::error($msg, $code)   // Error response
 Response::notFound()           // 404 Not Found
 ```
 
 ### Response Format
-All responses follow this structure:
 ```json
 {
   "success": true,
-  "message": "Success", 
+  "message": "Success",
   "data": { "your": "data" },
   "timestamp": "2025-08-09 14:00:00"
 }
 ```
 
-## Built-in Features
+## Features
 
-### HTTP Client for External APIs
-```php
-use Forgr\HTTP\Client;
-
-function fetch_data(Request $request): Response {
-    $client = new Client();
-    $data = $client->get('https://api.example.com');
-    return Response::success($data);
-}
-
-get('fetch_data');
-```
-
-### Authentication Example
-```php
-function secure_route(Request $request): Response {
-    $token = $request->getBearerToken();
-    
-    if (!$token || $token !== 'secret-key') {
-        return Response::error('Unauthorized', 401);
-    }
-    
-    return Response::success(['message' => 'Access granted']);
-}
-
-get('secure_route');
-```
-
-### File Upload Example
-```php
-function upload(Request $request): Response {
-    if (!isset($_FILES['file'])) {
-        return Response::error('No file uploaded', 400);
-    }
-    
-    $file = $_FILES['file'];
-    // Handle file upload logic here
-    
-    return Response::success(['filename' => $file['name']]);
-}
-
-post('upload');
-```
-
-## Project Structure
-
-```
-forgr/
-├── src/Core/           # App, Request, Response classes
-├── src/HTTP/           # HTTP client for external APIs  
-├── src/Middleware/     # CORS handling
-├── src/helpers.php     # Global helper functions
-├── routes/             # Your API functions
-├── index.php           # Entry point
-└── composer.json       # Dependencies
-```
-
-## Production Deployment
-
-### Apache (.htaccess)
-```apache
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ index.php [QSA,L]
-```
-
-### Nginx
-```nginx
-location / {
-    try_files $uri $uri/ /index.php?$query_string;
-}
-```
-
-### Docker
-```dockerfile
-FROM php:8.1-apache
-COPY . /var/www/html/
-RUN composer install --no-dev
-EXPOSE 80
-```
-
-## Why Forgr?
-
-- ✅ **Zero Configuration** - Works out of the box
-- ✅ **No Framework** - Just pure PHP functions  
-- ✅ **Auto CORS** - Frontend integration ready
-- ✅ **Built-in HTTP Client** - Call external APIs easily
-- ✅ **Structured Responses** - Consistent JSON format
-- ✅ **Auto-Discovery** - Drop files in routes/ folder
-- ✅ **Production Ready** - Error handling, logging, CORS
+- ✅ **Zero Configuration** - Works immediately
+- ✅ **Function-based** - No classes or frameworks
+- ✅ **CORS Ready** - Frontend integration built-in
+- ✅ **HTTP Client** - Make external API calls with Guzzle
+- ✅ **Consistent JSON** - Structured response format
+- ✅ **Error Handling** - Automatic error responses
 
 ## Requirements
 
@@ -203,8 +104,4 @@ EXPOSE 80
 
 ## License
 
-MIT - Build amazing APIs!
-
----
-
-**Forgr: The simplest way to build REST APIs in PHP.**
+MIT
