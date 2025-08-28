@@ -15,42 +15,73 @@ function forgr(): App
     return App::getInstance();
 }
 
+function resolveRoutePath(string $path): string
+{
+    // Remove query params if present
+    $path = parse_url($path, PHP_URL_PATH) ?? '';
+
+    // Trim slashes
+    $path = '/' . trim($path, '/');
+
+    // Special case for root
+    return $path === '/' ? '/' : $path;
+}
+
+
 /**
  * Register a GET route
  */
-function get(string $name): void
+
+function get(string $uri, string $functionName): void
 {
-    App::getInstance()->register($name, ['method' => 'GET']);
+    $uri = resolveRoutePath($uri);
+
+    $config['method'] = 'GET';
+    App::getInstance()->register($uri, $functionName, $config);
 }
 
 /**
  * Register a POST route
  */
-function post(string $name): void
+function post(string $uri, string $functionName): void
 {
-    App::getInstance()->register($name, ['method' => 'POST']);
+    $uri = resolveRoutePath($uri);
+
+    $config['method'] = 'POST';
+    App::getInstance()->register($uri, $functionName, $config);
 }
+
 
 /**
  * Register a PUT route
  */
-function put(string $name): void
+function put(string $uri, string $functionName): void
 {
-    App::getInstance()->register($name, ['method' => 'PUT']);
+    $uri = resolveRoutePath($uri);
+
+    $config['method'] = 'PUT';
+    App::getInstance()->register($uri, $functionName, $config);
 }
+
 
 /**
  * Register a DELETE route
  */
-function delete(string $name): void
+function delete(string $uri, string $functionName): void
 {
-    App::getInstance()->register($name, ['method' => 'DELETE']);
+    $uri = resolveRoutePath($uri);
+
+    $config['method'] = 'DELETE';
+    App::getInstance()->register($uri, $functionName, $config);
 }
 
 /**
  * Register any route (default GET)
- */
-function route(string $name, string $method = 'GET'): void
+*/
+function route(string $uri, string $functionName, string $method = 'GET'): void
 {
-    App::getInstance()->register($name, ['method' => strtoupper($method)]);
+    $uri = resolveRoutePath($uri);
+
+    $config['method'] = strtoupper($method);
+    App::getInstance()->register($uri, $functionName, $config);
 }
