@@ -29,32 +29,32 @@ try {
         $response->withCors()->send();
         exit;
     }
-    
+
     // Initialize Forgr app
     $app = App::getInstance();
-    
+
     // Load all routes
     $routeFiles = glob(__DIR__ . '/routes/**/*.php');
     foreach ($routeFiles as $routeFile) {
         require_once $routeFile;
     }
-    
+
     // Get route name from request
     $request = new Request();
     $routeName = $request->getRouteName();
-    
+
     if (!$routeName) {
-        $response = Response::error('Route not specified. Use X-Route header or "route" parameter.', 400);
+        $response = Response::error('Route not specified. Invalid URI path.', 400);
         $response->withCors()->send();
         exit;
     }
-    
+
+
     // Execute the route
     $response = $app->execute($routeName);
-    
+
     // Send response with CORS headers
     $response->withCors()->send();
-    
 } catch (Exception $e) {
     error_log("Application error: " . $e->getMessage());
     $response = Response::error('Internal server error', 500);

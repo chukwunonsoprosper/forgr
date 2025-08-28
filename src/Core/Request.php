@@ -13,7 +13,7 @@ class Request
     private array $files;
     private array $routeConfig = [];
     private ?object $user = null;
-    
+
     public function __construct()
     {
         $this->query = $_GET ?? [];
@@ -21,7 +21,7 @@ class Request
         $this->files = $_FILES ?? [];
         $this->parseBody();
     }
-    
+
     /**
      * Get HTTP method
      */
@@ -29,7 +29,7 @@ class Request
     {
         return $_SERVER['REQUEST_METHOD'] ?? 'GET';
     }
-    
+
     /**
      * Get request path
      */
@@ -37,7 +37,7 @@ class Request
     {
         return $_SERVER['REQUEST_URI'] ?? '/';
     }
-    
+
     /**
      * Get query parameter
      */
@@ -48,7 +48,7 @@ class Request
         }
         return $this->query[$key] ?? $default;
     }
-    
+
     /**
      * Get body parameter (POST data or JSON)
      */
@@ -59,7 +59,7 @@ class Request
         }
         return $this->body[$key] ?? $default;
     }
-    
+
     /**
      * Get request body as array
      */
@@ -67,7 +67,7 @@ class Request
     {
         return $this->body;
     }
-    
+
     /**
      * Get request header
      */
@@ -76,7 +76,7 @@ class Request
         $key = strtolower(str_replace('_', '-', $key));
         return $this->headers[$key] ?? $default;
     }
-    
+
     /**
      * Get all headers
      */
@@ -84,21 +84,21 @@ class Request
     {
         return $this->headers;
     }
-    
+
     /**
      * Get Bearer token from Authorization header
      */
     public function getBearerToken(): ?string
     {
         $auth = $this->getHeader('authorization');
-        
+
         if ($auth && str_starts_with($auth, 'Bearer ')) {
             return substr($auth, 7);
         }
-        
+
         return null;
     }
-    
+
     /**
      * Get uploaded file
      */
@@ -107,11 +107,11 @@ class Request
         if (!isset($this->files[$key])) {
             return null;
         }
-        
+
         $file = $this->files[$key];
         return new UploadedFile($file);
     }
-    
+
     /**
      * Get all uploaded files
      */
@@ -123,24 +123,24 @@ class Request
         }
         return $files;
     }
-    
+
     /**
      * Get client IP address
      */
     public function getClientIP(): string
     {
         $headers = ['X-Forwarded-For', 'X-Real-IP', 'HTTP_CLIENT_IP'];
-        
+
         foreach ($headers as $header) {
             $ip = $this->getHeader($header);
             if ($ip) {
                 return explode(',', $ip)[0];
             }
         }
-        
+
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }
-    
+
     /**
      * Check if route is protected
      */
@@ -148,7 +148,7 @@ class Request
     {
         return $this->routeConfig['protected'] ?? false;
     }
-    
+
     /**
      * Set route configuration
      */
@@ -156,7 +156,7 @@ class Request
     {
         $this->routeConfig = $config;
     }
-    
+
     /**
      * Get authenticated user
      */
@@ -164,7 +164,7 @@ class Request
     {
         return $this->user;
     }
-    
+
     /**
      * Set authenticated user
      */
@@ -172,27 +172,38 @@ class Request
     {
         $this->user = $user;
     }
-    
+
     /**
      * Get route name from X-Route header or route parameter
      */
+    // public function getRouteName(): ?string
+    // {
+    //     // Try X-Route header first
+    //     $route = $this->getHeader('x-route');
+    //     if ($route) {
+    //         return $route;
+    //     }
+
+    //     // Try route parameter in body
+    //     return $this->get('route');
+    // }
+
+
+
+
     public function getRouteName(): ?string
     {
-        // Try X-Route header first
-        $route = $this->getHeader('x-route');
-        if ($route) {
-            return $route;
-        }
-        
-        // Try route parameter in body
-        return $this->get('route');
+       return resolveRoutePath($this->getPath());
     }
-    
+
+
+
+
     private function parseBody(): void
     {
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         $input = file_get_contents('php://input');
-        
+
         if (str_contains($contentType, 'application/json')) {
             $this->body = json_decode($input, true) ?? [];
         } elseif (str_contains($contentType, 'application/x-www-form-urlencoded')) {
@@ -201,11 +212,11 @@ class Request
             $this->body = $_POST ?? [];
         }
     }
-    
+
     private function getAllHeaders(): array
     {
         $headers = [];
-        
+
         if (function_exists('getallheaders')) {
             $rawHeaders = getallheaders();
             foreach ($rawHeaders as $key => $value) {
@@ -220,7 +231,7 @@ class Request
                 }
             }
         }
-        
+
         return $headers;
     }
 }
@@ -231,55 +242,55 @@ class Request
 class UploadedFile
 {
     private array $file;
-    
+
     public function __construct(array $file)
     {
         $this->file = $file;
     }
-    
+
     public function getName(): string
     {
         return $this->file['name'] ?? '';
     }
-    
+
     public function getMimeType(): string
     {
         return $this->file['type'] ?? '';
     }
-    
+
     public function getSize(): int
     {
         return $this->file['size'] ?? 0;
     }
-    
+
     public function getTempPath(): string
     {
         return $this->file['tmp_name'] ?? '';
     }
-    
+
     public function getError(): int
     {
         return $this->file['error'] ?? UPLOAD_ERR_NO_FILE;
     }
-    
+
     public function getContent(): string
     {
         if ($this->getError() !== UPLOAD_ERR_OK) {
             return '';
         }
-        
+
         return file_get_contents($this->getTempPath()) ?: '';
     }
-    
+
     public function getHashName(string $extension = null): string
     {
         if ($extension === null) {
             $extension = pathinfo($this->getName(), PATHINFO_EXTENSION);
         }
-        
+
         return hash('sha256', $this->getName() . time()) . '.' . $extension;
     }
-    
+
     public function moveTo(string $destination): bool
     {
         return move_uploaded_file($this->getTempPath(), $destination);

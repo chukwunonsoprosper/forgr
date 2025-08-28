@@ -5,6 +5,7 @@ use Forgr\Core\Response;
 
 function user(Request $request): Response
 {
+
     // Get URL parameters using $request->getQuery() for query parameters
     $name = $request->getQuery('name') ?? 'Guest';
     $age = $request->getQuery('age') ?? 'unknown';
@@ -17,6 +18,8 @@ function user(Request $request): Response
         ],
     ]);
 }
-//register function as an API route
 
-get('user');
+// Define the /user GET endpoint and bind it to the user() function
+
+get('/user', 'user');
+
