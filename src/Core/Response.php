@@ -59,6 +59,44 @@ class Response
         
         return self::json($data, $statusCode);
     }
+
+    /**
+     * Create detailed error response for debugging
+     */
+    public static function debugError(string $message, \Throwable $exception, int $statusCode = 500): self
+    {
+        $isDebugMode = $_ENV['FORGR_DEBUG'] ?? $_ENV['APP_ENV'] === 'development' ?? false;
+        $isDebugMode = filter_var($isDebugMode, FILTER_VALIDATE_BOOLEAN);
+        
+        $data = [
+            'success' => false,
+            'error' => $message,
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+        
+        if ($isDebugMode) {
+            $data['debug'] = [
+                'exception_message' => $exception->getMessage(),
+                'exception_type' => get_class($exception),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'stack_trace' => array_slice($exception->getTrace(), 0, 10), // Limit stack trace
+                'context' => [
+                    'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'Unknown',
+                    'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown',
+                    'route_header' => $_SERVER['HTTP_X_ROUTE'] ?? 'Not set'
+                ]
+            ];
+        }
+        
+        // Always log the full error details
+        error_log("Forgr Error: " . $message);
+        error_log("Exception: " . $exception->getMessage());
+        error_log("File: " . $exception->getFile() . " Line: " . $exception->getLine());
+        error_log("Stack trace: " . $exception->getTraceAsString());
+        
+        return self::json($data, $statusCode);
+    }
     
     /**
      * Create unauthorized response

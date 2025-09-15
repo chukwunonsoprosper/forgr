@@ -56,11 +56,9 @@ try {
     $response->withCors()->send();
     
 } catch (Exception $e) {
-    error_log("Application error: " . $e->getMessage());
-    $response = Response::error('Internal server error', 500);
+    $response = Response::debugError('Application error: ' . $e->getMessage(), $e, 500);
     $response->withCors()->send();
 } catch (Error $e) {
-    error_log("Fatal error: " . $e->getMessage());
-    $response = Response::error('Internal server error', 500);
+    $response = Response::debugError('Fatal error: ' . $e->getMessage(), $e, 500);
     $response->withCors()->send();
 }

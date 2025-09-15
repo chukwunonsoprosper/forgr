@@ -90,9 +90,12 @@ class App
             
             return $response;
             
-        } catch (\Exception $e) {
-            error_log("Route execution error: " . $e->getMessage());
-            return Response::error('Internal server error', 500);
+        } catch (\Throwable $e) {
+            return Response::debugError(
+                'Route execution failed: ' . $e->getMessage(),
+                $e,
+                500
+            );
         }
     }
     

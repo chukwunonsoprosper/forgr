@@ -54,3 +54,67 @@ function route(string $name, string $method = 'GET'): void
 {
     App::getInstance()->register($name, ['method' => strtoupper($method)]);
 }
+
+/**
+ * Include a PHP file relative to the project root
+ * This helps solve path issues when including files from routes
+ */
+function forgr_include(string $relativePath): mixed
+{
+    $rootPath = realpath(__DIR__ . '/..');
+    $fullPath = $rootPath . '/' . ltrim($relativePath, '/');
+    
+    if (!file_exists($fullPath)) {
+        throw new \InvalidArgumentException("File not found: {$relativePath} (resolved to: {$fullPath})");
+    }
+    
+    return include $fullPath;
+}
+
+/**
+ * Require a PHP file relative to the project root
+ * This helps solve path issues when requiring files from routes
+ */
+function forgr_require(string $relativePath): mixed
+{
+    $rootPath = realpath(__DIR__ . '/..');
+    $fullPath = $rootPath . '/' . ltrim($relativePath, '/');
+    
+    if (!file_exists($fullPath)) {
+        throw new \InvalidArgumentException("File not found: {$relativePath} (resolved to: {$fullPath})");
+    }
+    
+    return require $fullPath;
+}
+
+/**
+ * Require once a PHP file relative to the project root
+ * This helps solve path issues when requiring files from routes
+ */
+function forgr_require_once(string $relativePath): mixed
+{
+    $rootPath = realpath(__DIR__ . '/..');
+    $fullPath = $rootPath . '/' . ltrim($relativePath, '/');
+    
+    if (!file_exists($fullPath)) {
+        throw new \InvalidArgumentException("File not found: {$relativePath} (resolved to: {$fullPath})");
+    }
+    
+    return require_once $fullPath;
+}
+
+/**
+ * Get the project root path
+ */
+function forgr_root(): string
+{
+    return realpath(__DIR__ . '/..');
+}
+
+/**
+ * Get a path relative to the project root
+ */
+function forgr_path(string $relativePath): string
+{
+    return forgr_root() . '/' . ltrim($relativePath, '/');
+}
