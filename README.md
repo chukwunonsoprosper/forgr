@@ -95,12 +95,160 @@ Response::notFound()           // 404 Not Found
 - ✅ **CORS Ready** - Frontend integration built-in
 - ✅ **HTTP Client** - Make external API calls with Guzzle
 - ✅ **Consistent JSON** - Structured response format
-- ✅ **Error Handling** - Automatic error responses
+- ✅ **Enhanced Error Handling** - Detailed debugging information
+- ✅ **File Inclusion System** - Easy inclusion of external PHP files
+
+## Enhanced Error Handling
+
+Forgr now provides detailed error information to help with debugging while maintaining security in production.
+
+### Debug Mode
+Enable detailed error reporting by setting the environment variable:
+```bash
+FORGR_DEBUG=true
+```
+
+In debug mode, errors include:
+- Exception message and type
+- File and line number
+- Stack trace (limited to 10 frames)
+- Request context (method, URI, route header)
+
+### Production Mode
+When `FORGR_DEBUG=false` or not set, only basic error messages are returned without sensitive information.
+
+### Example Error Response (Debug Mode)
+```json
+{
+  "success": false,
+  "error": "Route execution failed: Call to undefined function undefined_function_call()",
+  "timestamp": "2025-09-15 14:13:16",
+  "debug": {
+    "exception_message": "Call to undefined function undefined_function_call()",
+    "exception_type": "Error",
+    "file": "/path/to/routes/test_error.php",
+    "line": 9,
+    "stack_trace": [...],
+    "context": {
+      "request_method": "GET",
+      "request_uri": "/",
+      "route_header": "test_error"
+    }
+  }
+}
+```
+
+## File Inclusion System
+
+Forgr provides helper functions to easily include external PHP files from any directory without path issues.
+
+### Helper Functions
+
+```php
+// Include a file relative to project root
+forgr_include('path/to/file.php');
+
+// Require a file relative to project root
+forgr_require('path/to/file.php');
+
+// Require once a file relative to project root
+forgr_require_once('path/to/file.php');
+
+// Get project root path
+$root = forgr_root();
+
+// Get absolute path relative to project root
+$path = forgr_path('config/database.php');
+```
+
+### Example Usage in Routes
+
+```php
+<?php
+use Forgr\Core\Request;
+use Forgr\Core\Response;
+
+// Include external SQL helper
+forgr_require_once('sql_helper.php');
+
+function my_route(Request $request): Response
+{
+    $connection = getDbConnection();
+    $result = sql_query("SELECT * FROM users");
+    
+    return Response::success([
+        'connection' => $connection,
+        'data' => $result
+    ]);
+}
+
+post('my_route');
+```
 
 ## Requirements
 
 - PHP 8.1+
 - Composer
+
+## Configuration
+
+Create a `.env` file in your project root for configuration:
+
+```bash
+# Debug mode - set to true for detailed error reporting
+FORGR_DEBUG=true
+
+# App environment
+APP_ENV=development
+
+# Error logging level
+LOG_LEVEL=debug
+```
+
+**Important:** Set `FORGR_DEBUG=false` in production to avoid exposing sensitive information.
+
+## Best Practices
+
+### File Organization
+```
+my-api/
+├── routes/          # Your API functions
+│   ├── user.php
+│   └── auth.php
+├── helpers/         # Shared PHP files
+│   ├── database.php
+│   └── utils.php
+├── config/          # Configuration files
+└── .env            # Environment variables
+```
+
+### Including External Files
+Always use the forgr helper functions for file inclusion:
+
+```php
+// ✅ Good - uses helper function
+forgr_require_once('helpers/database.php');
+
+// ❌ Bad - relative path issues
+require_once '../helpers/database.php';
+```
+
+### Error Handling
+Let Forgr handle errors automatically, but you can also create custom error responses:
+
+```php
+function my_route(Request $request): Response
+{
+    $data = $request->getBody();
+    
+    if (empty($data['email'])) {
+        return Response::error('Email is required', 400);
+    }
+    
+    // Your logic here
+    return Response::success($result);
+}
+```
 
 ## License
 
